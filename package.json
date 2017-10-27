@@ -1,0 +1,30 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "ITGM telegram bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "docker-build": "docker build -t mike1pol/itgm-bot .",
+    "test": "eslint ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piter-united/bot.git"
+  },
+  "author": "Mikhail Poluboyarinov <mikle.sol@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/piter-united/bot/issues"
+  },
+  "homepage": "https://github.com/piter-united/bot#readme",
+  "dependencies": {
+    "firebase-admin": "^5.4.3",
+    "telegraf": "^3.14.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.9.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0"
+  }
+}
