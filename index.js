@@ -43,23 +43,34 @@ const mainReply = Markup.inlineKeyboard([
   [Markup.callbackButton('Схема размещения сообществ', 'schema')],
 ]).resize().extra();
 
-app.command('start', ({user, reply}) => {
+
+function start(user, reply) {
   const name = `${user.first_name} ${user.last_name}`;
   const text = `Привет ${name}! Я бот IT Global MeetUp. Я могу поделиться с тобой программой сообществ.
 А еще тут ты сможешь голосовать за доклады которые прослушал.
 `;
   return reply(text, mainReply);
-});
+}
+
+app.command('start', ({user, reply}) => start(user, reply));
 
 app.command('help', ({reply}) => reply('Всегда рад помочь!', mainReply));
+app.hears('помощь', ({reply}) => reply('Всегда рад помочь!', mainReply));
+app.hears('меню', ({reply, user}) => start(user, reply));
 
-app.action('community', ({reply}) => {
+function communityList(reply) {
   const menuItems = community.map((c, i) => [Markup.callbackButton(c, `community::${i}`)]);
   const menu = Markup.inlineKeyboard(menuItems).resize().extra();
   return reply('Сообщества', menu);
-});
+}
+
+app.action('community', ({reply}) => communityList(reply));
+app.hears('сообщества', ({reply}) => communityList(reply));
+app.hears('программа', ({reply}) => communityList(reply));
 
 app.action('schema', ({replyWithPhoto}) => replyWithPhoto('http://lorempixel.com/400/200/cats/'));
+app.hears('схема размещения сообществ', ({replyWithPhoto}) => replyWithPhoto('http://lorempixel.com/400/200/cats/'));
+app.hears('схема', ({replyWithPhoto}) => replyWithPhoto('http://lorempixel.com/400/200/cats/'));
 
 function showCommunity(reply, id) {
   if (!data[id]) {
@@ -91,13 +102,11 @@ function showSpeaker(reply, id, sid) {
     Markup.callbackButton('❤️', `vote::${id}::${sid}::5`),
   ];
   const menu = Markup.inlineKeyboard(menuItems).extra();
-  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}
-*${s.subject}*
-${s.description}
+  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}${s.subject ? `*${s.subject}*\n` : ''}${s.description ? s.description : ''}
 `, menu);
 }
 
-function voteForSpeaker(reply, id, sid, vote) {
+function voteForSpeaker(reply, user, id, sid, vote) {
   if (!data[id]) {
     return reply('Простите но такого сообщества у меня нет :(');
   }
@@ -107,17 +116,17 @@ function voteForSpeaker(reply, id, sid, vote) {
   }
   const s = c.program[sid];
 
-  return reply(`${s.speaker}, ${vote}`);
+  return reply(`${s.speaker}, ${vote} ${user.first_name}`);
 }
 
-app.action(/.+/, ({replyWithMarkdown, match}) => {
+app.action(/.+/, ({replyWithMarkdown, match, user}) => {
   const [cmd, id, sid, vote] = match[0].split('::');
   if (cmd === 'community') {
     return showCommunity(replyWithMarkdown, id);
   } else if (cmd === 'speaker') {
     return showSpeaker(replyWithMarkdown, id, sid);
   } else if (cmd === 'vote') {
-    return voteForSpeaker(replyWithMarkdown, id, sid, vote);
+    return voteForSpeaker(replyWithMarkdown, user, id, sid, vote);
   }
   return replyWithMarkdown('Простите я не знаю данной команды :(');
 });
