@@ -16,9 +16,14 @@ let community = [];
 let users = {};
 
 const usersRef = firebase.database().ref('users');
-
 usersRef.on('value', (snapshot) => {
   users = snapshot.val() || {};
+});
+
+let votes = [];
+const votesRef = firebase.database().ref('votes');
+votesRef.on('value', (snapshot) => {
+  votes = snapshot.val() || [];
 });
 
 app.use((res, next) => {
@@ -102,7 +107,7 @@ function showSpeaker(reply, id, sid) {
     Markup.callbackButton('❤️', `vote::${id}::${sid}::5`),
   ];
   const menu = Markup.inlineKeyboard(menuItems).extra();
-  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}${s.subject ? `*${s.subject}*\n` : ''}${s.description ? s.description : ''}
+  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}${s.subject ? `\n*${s.subject}*\n` : ''}${s.description ? s.description : ''}
 `, menu);
 }
 
@@ -123,13 +128,9 @@ function voteForSpeaker(reply, user, id, sid, vote) {
     user.votes = [];
   }
   user.votes.push(vId);
-  firebase.database().ref('votes')
-    .on((snapshot) => {
-      const votes = snapshot.val() || [];
-      votes.push({speaker, vote});
-      firebase.database().ref(`users/${user.id}`).set(user);
-      firebase.database().ref('votes').set(votes);
-    });
+  votes.push({speaker, vote});
+  firebase.database().ref(`users/${user.id}`).set(user);
+  firebase.database().ref('votes').set(votes);
   return reply('Спасибо за Ваш голос!');
 }
 
@@ -146,5 +147,20 @@ app.action(/.+/, ({replyWithMarkdown, match, user}) => {
 });
 
 app.command('ping', ({reply}) => reply('pong'));
+
+app.command('status', ({reply}) => {
+  const speakers = [];
+  votes.forEach(({speaker, vote}) => {
+    let s = speakers.find(v => v.speaker === speaker);
+    if (s) {
+      s = Object.assign(s, {count: s.count + 1, vote: s.vote + vote});
+    } else {
+      speakers.push({speaker, count: 1, vote});
+    }
+  });
+  reply(`Всего пользователей: ${Object.keys(users).length}
+Всего голосов: ${votes.length}
+${votes.length ? speakers.map(v => `${v.speaker}: ${v.vote} (${v.count})\n`) : ''}`);
+});
 
 app.startPolling();
