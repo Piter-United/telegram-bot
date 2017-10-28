@@ -79,7 +79,7 @@ function showCommunity(reply, id) {
   const c = data[id];
   const menuItems = [];
   c.program.forEach((s, i) => {
-    menuItems.push([Markup.callbackButton(`${s.time} - ${s.speaker} - ${s.subject}`, `speaker::${id}::${i}`)]);
+    menuItems.push([Markup.callbackButton(`${s.time}${s.speaker ? ` - ${s.speaker}` : ''}${s.subject ? ` - ${s.subject}` : ''}`, `speaker::${id}::${i}`)]);
   });
   const menu = Markup.inlineKeyboard(menuItems).extra();
   return reply(`*${c.community}*`, menu);
@@ -110,13 +110,27 @@ function voteForSpeaker(reply, user, id, sid, vote) {
   if (!data[id]) {
     return reply('Простите но такого сообщества у меня нет :(');
   }
-  const c = data[id];
-  if (!c.program[sid]) {
+  const {program} = data[id];
+  if (!program[sid]) {
     return reply('Простите но такого доклада у меня нет :(');
   }
-  const s = c.program[sid];
-
-  return reply(`${s.speaker}, ${vote} ${user.first_name}`);
+  const {speaker} = program[sid];
+  const vId = `${id}::${sid}`;
+  if (user.votes && user.votes.find(v => v === vId)) {
+    return reply('Вы уже голосовали за данный доклад');
+  }
+  if (!user.votes) {
+    user.votes = [];
+  }
+  user.votes.push(vId);
+  firebase.database().ref('votes')
+    .on((snapshot) => {
+      const votes = snapshot.val() || [];
+      votes.push({speaker, vote});
+      firebase.database().ref(`users/${user.id}`).set(user);
+      firebase.database().ref('votes').set(votes);
+    });
+  return reply('Спасибо за Ваш голос!');
 }
 
 app.action(/.+/, ({replyWithMarkdown, match, user}) => {
