@@ -99,16 +99,15 @@ function showSpeaker(reply, id, sid) {
     return reply('Простите но такого доклада у меня нет :(');
   }
   const s = c.program[sid];
-  const menuItems = [
-    Markup.callbackButton('💩', `vote::${id}::${sid}::1`),
-    Markup.callbackButton('👎', `vote::${id}::${sid}::2`),
-    Markup.callbackButton('👌', `vote::${id}::${sid}::3`),
-    Markup.callbackButton('👍', `vote::${id}::${sid}::4`),
-    Markup.callbackButton('❤️', `vote::${id}::${sid}::5`),
-  ];
-  const menu = Markup.inlineKeyboard(menuItems).extra();
-  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}${s.subject ? `\n*${s.subject}*\n` : ''}${s.description ? s.description : ''}
-`, menu);
+  // const menuItems = [
+  //   Markup.callbackButton('💩', `vote::${id}::${sid}::1`),
+  //   Markup.callbackButton('👎', `vote::${id}::${sid}::2`),
+  //   Markup.callbackButton('👌', `vote::${id}::${sid}::3`),
+  //   Markup.callbackButton('👍', `vote::${id}::${sid}::4`),
+  //   Markup.callbackButton('❤️', `vote::${id}::${sid}::5`),
+  // ];
+  // const menu = Markup.inlineKeyboard(menuItems).extra();
+  return reply(`${s.time} - ${s.speaker} ${(s.company) ? `(${s.company})` : ''}${s.subject ? `\n*${s.subject}*\n` : ''}${s.description ? s.description : ''}`); // , menu);
 }
 
 function voteForSpeaker(reply, user, id, sid, vote) {
